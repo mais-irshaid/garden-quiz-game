@@ -1,17 +1,34 @@
 /* رحلة في بستان الأنظمة — لعبة تعليمية ثابتة بلا خادم */
 
-const questions = [
-  { text: "شو بنسمي البرنامج الأساسي اللي بيشتغل وسيط بين المستخدم ومكونات جهاز الحاسوب؟", options: ["نظام التشغيل", "متصفح الإنترنت", "معالج النصوص"], correctIndex: 0 },
-  { text: "أي من هذول مثال على نظام تشغيل طورته شركة مايكروسوفت؟", options: ["ماك أو إس", "ويندوز", "أندرويد"], correctIndex: 1 },
-  { text: "مين الشركة اللي طورت نظام التشغيل ماك أو إس (MacOS)؟", options: ["مايكروسوفت", "آبل", "جوجل"], correctIndex: 1 },
-  { text: "أنظمة التشغيل يلي شيفرتها المصدرية سرية وغير متاحة للجميع بتسمى؟", options: ["مفتوحة المصدر", "مغلقة المصدر", "مجانية بالكامل"], correctIndex: 1 },
-  { text: "أنظمة التشغيل يلي بتسمح للمطورين يعدّلوا ويوزّعوا شيفرتها بحرية بتسمى؟", options: ["مغلقة المصدر", "مفتوحة المصدر", "محمية بحقوق الملكية"], correctIndex: 1 },
-  { text: "شو اسم البرنامج اللي بيعرض العمليات النشطة والموارد المخصصة إلها متل الذاكرة ووحدة المعالجة؟", options: ["مدير المهام (Task Manager)", "مستكشف الملفات", "لوحة التحكم"], correctIndex: 0 },
-  { text: "شو اسم المستخدم اللي إله صلاحيات كاملة وبقدر يغيّر إعدادات النظام ويدير حسابات المستخدمين الآخرين؟", options: ["المستخدم القياسي", "المستخدم المسؤول", "المستخدم الضيف"], correctIndex: 1 },
-  { text: "أي وظيفة من وظائف نظام التشغيل بتهتم بإدارة البيانات الداخلة من لوحة المفاتيح والفأرة والخارجة للشاشة والطابعة؟", options: ["إدارة الذاكرة", "التحكم في عمليات الإدخال والإخراج", "إدارة البرامج"], correctIndex: 1 },
-  { text: "قدرة نظام التشغيل على فتح وإدارة أكثر من برنامج بنفس الوقت بتسمى؟", options: ["Multitasking (المهام المتعددة)", "Open Source", "File Management"], correctIndex: 0 },
-  { text: "شو اسم البرنامج المستخدم لاستكشاف وترتيب الملفات والمجلدات بنظام ويندوز؟", options: ["File Explorer (مستكشف الملفات)", "Finder", "Task Manager"], correctIndex: 0 }
-];
+/* بنك الأسئلة (questionBank) موجود بملف questions.js */
+const QUESTIONS_PER_GAME = 10;
+let questions = [];
+let recentlyUsed = new Set();
+
+function shuffle(list) {
+  const copy = [...list];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+/* نسحب 10 أسئلة جديدة من البنك (نفضّل الأسئلة اللي ما طلعت بالألعاب السابقة)، ونخلط ترتيب الخيارات */
+function pickQuestions() {
+  let fresh = questionBank.filter((q) => !recentlyUsed.has(q));
+  if (fresh.length < QUESTIONS_PER_GAME) {
+    recentlyUsed = new Set();
+    fresh = [...questionBank];
+  }
+  const picked = shuffle(fresh).slice(0, QUESTIONS_PER_GAME);
+  picked.forEach((q) => recentlyUsed.add(q));
+  return picked.map((q) => {
+    const correctText = q.options[q.correctIndex];
+    const options = shuffle(q.options);
+    return { text: q.text, options, correctIndex: options.indexOf(correctText) };
+  });
+}
 
 const scene = document.getElementById("scene");
 const girl = document.getElementById("girl");
@@ -267,6 +284,7 @@ async function finishJourney() {
 function beginGame() {
   winOverlay.hidden = true;
   loseOverlay.hidden = true;
+  questions = pickQuestions();
   resetVisuals();
   started = true;
   startButton.hidden = true;
