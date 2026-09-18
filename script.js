@@ -1,6 +1,5 @@
-// ===== بنك الأسئلة =====
-// كل سؤال فيه نص وثلاث خيارات، وترتيب "correctIndex" يحدد مكان الإجابة الصحيحة (0 أو 1 أو 2)
-// الأسئلة هون مأخوذة من درس "نظام التشغيل" بكتاب المهارات الرقمية - تقدرين تبدليها بسهولة
+/* رحلة في بستان الأنظمة — لعبة تعليمية ثابتة بلا خادم */
+
 const questions = [
   { text: "شو بنسمي البرنامج الأساسي اللي بيشتغل وسيط بين المستخدم ومكونات جهاز الحاسوب؟", options: ["نظام التشغيل", "متصفح الإنترنت", "معالج النصوص"], correctIndex: 0 },
   { text: "أي من هذول مثال على نظام تشغيل طورته شركة مايكروسوفت؟", options: ["ماك أو إس", "ويندوز", "أندرويد"], correctIndex: 1 },
@@ -11,239 +10,282 @@ const questions = [
   { text: "شو اسم المستخدم اللي إله صلاحيات كاملة وبقدر يغيّر إعدادات النظام ويدير حسابات المستخدمين الآخرين؟", options: ["المستخدم القياسي", "المستخدم المسؤول", "المستخدم الضيف"], correctIndex: 1 },
   { text: "أي وظيفة من وظائف نظام التشغيل بتهتم بإدارة البيانات الداخلة من لوحة المفاتيح والفأرة والخارجة للشاشة والطابعة؟", options: ["إدارة الذاكرة", "التحكم في عمليات الإدخال والإخراج", "إدارة البرامج"], correctIndex: 1 },
   { text: "قدرة نظام التشغيل على فتح وإدارة أكثر من برنامج بنفس الوقت بتسمى؟", options: ["Multitasking (المهام المتعددة)", "Open Source", "File Management"], correctIndex: 0 },
-  { text: "شو اسم البرنامج المستخدم لاستكشاف وترتيب الملفات والمجلدات بنظام ويندوز؟", options: ["File Explorer (مستكشف الملفات)", "Finder", "Task Manager"], correctIndex: 0 },
+  { text: "شو اسم البرنامج المستخدم لاستكشاف وترتيب الملفات والمجلدات بنظام ويندوز؟", options: ["File Explorer (مستكشف الملفات)", "Finder", "Task Manager"], correctIndex: 0 }
 ];
 
-const MAX_ATTEMPTS = 3;
-
-// ===== أصوات بسيطة (بدون ملفات، مولّدة مباشرة بالمتصفح) =====
-let audioCtx = null;
-function getAudioCtx() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  return audioCtx;
-}
-
-function playTone(freq, startTime, duration) {
-  const ctx = getAudioCtx();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "sine";
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(0, startTime);
-  gain.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start(startTime);
-  osc.stop(startTime + duration);
-}
-
-function playCorrectSound() {
-  const now = getAudioCtx().currentTime;
-  playTone(660, now, 0.15);
-  playTone(880, now + 0.12, 0.2);
-}
-
-function playWinSound() {
-  const now = getAudioCtx().currentTime;
-  [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => playTone(freq, now + i * 0.15, 0.25));
-}
-
-function playWrongSound() {
-  const now = getAudioCtx().currentTime;
-  playTone(220, now, 0.18);
-}
-
-function playLoseSound() {
-  const now = getAudioCtx().currentTime;
-  [392, 329.63, 261.63].forEach((freq, i) => playTone(freq, now + i * 0.18, 0.3));
-}
-
-function playStartSound() {
-  const now = getAudioCtx().currentTime;
-  playTone(440, now, 0.12);
-}
-
-// ===== عناصر الصفحة =====
-const startBtn = document.getElementById("startBtn");
-const questionBubble = document.getElementById("questionBubble");
-const questionText = document.getElementById("questionText");
-const optionsContainer = document.getElementById("optionsContainer");
-const attemptsIndicator = document.getElementById("attemptsIndicator");
-const rock = document.getElementById("rock");
+const scene = document.getElementById("scene");
 const girl = document.getElementById("girl");
-const obstacleCountEl = document.getElementById("obstacleCount");
-const flowerBasket = document.getElementById("flowerBasket");
+const rock = document.getElementById("rock");
+const finish = document.getElementById("finish");
+const bubble = document.getElementById("questionBubble");
+const questionText = document.getElementById("questionText");
+const questionNumber = document.getElementById("questionNumber");
+const answers = document.getElementById("answers");
+const hearts = document.getElementById("hearts");
+const progressText = document.getElementById("progressText");
+const progressFill = document.getElementById("progressFill");
+const flowers = document.getElementById("flowers");
+const basket = document.getElementById("basket");
+const startHint = document.getElementById("startHint");
+const startButton = document.getElementById("startButton");
+const statusMessage = document.getElementById("statusMessage");
 const winOverlay = document.getElementById("winOverlay");
 const loseOverlay = document.getElementById("loseOverlay");
+const soundToggle = document.getElementById("soundToggle");
+const soundIcon = soundToggle.querySelector(".sound-icon");
 
-// ===== حالة اللعبة =====
 let currentObstacle = 0;
-let attemptsLeft = MAX_ATTEMPTS;
+let attemptsLeft = 3;
+let started = false;
+let busy = false;
+let muted = false;
+let audioContext = null;
+const WALK_MS = 650; // لازم يطابق مدة "transition: left" للكلاس .girl بملف style.css
 
-// ===== مواقع المشي عبر الشاشة =====
-// كل عائق إله موقع (كنسبة مئوية) على عرض المشهد، والبنت بتمشي وتوقف قبل الصخرة بمسافة بسيطة
-const START_POSITION = 4;
-const FINISH_POSITION = 92;
-const WALK_STOP_OFFSET = 9;
-const WALK_DURATION = 1050; // مطابق لمدة "transition: left" بملف style.css
+const arabicNumber = (value) => String(value).replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[digit]);
+const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-function rockPositionFor(index) {
-  const firstRock = 24;
-  const lastRock = 82;
-  const step = (lastRock - firstRock) / (questions.length - 1);
-  return firstRock + index * step;
+function setStatus(message) {
+  statusMessage.textContent = message;
 }
 
-function placeGirlInstantly(percent) {
-  girl.style.transition = "none";
-  girl.style.left = percent + "%";
-  void girl.offsetWidth; // نجبر المتصفح يطبّق الموقع فوراً قبل ما نرجّع الحركة
-  girl.style.transition = "";
+function getAudio() {
+  if (!audioContext) {
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtor) return null;
+    audioContext = new AudioCtor();
+  }
+  if (audioContext.state === "suspended") audioContext.resume();
+  return audioContext;
 }
 
-function walkGirlTo(percent, onArrive) {
-  girl.classList.add("walking");
-  girl.style.left = percent + "%";
-  setTimeout(() => {
-    girl.classList.remove("walking");
-    if (onArrive) onArrive();
-  }, WALK_DURATION);
+function tone(frequency, delay, duration, type = "sine") {
+  if (muted) return;
+  const audio = getAudio();
+  if (!audio) return;
+  const startAt = audio.currentTime + delay;
+  const oscillator = audio.createOscillator();
+  const gain = audio.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, startAt);
+  gain.gain.setValueAtTime(0.001, startAt);
+  gain.gain.exponentialRampToValueAtTime(.25, startAt + .02);
+  gain.gain.exponentialRampToValueAtTime(.001, startAt + duration);
+  oscillator.connect(gain).connect(audio.destination);
+  oscillator.start(startAt);
+  oscillator.stop(startAt + duration + .03);
 }
 
-function goToObstacle(index) {
-  const rockPos = rockPositionFor(index);
-  rock.classList.remove("solved");
-  rock.style.left = rockPos + "%";
-  walkGirlTo(rockPos - WALK_STOP_OFFSET, showQuestion);
+function playSound(kind) {
+  if (kind === "start") tone(440, 0, .12);
+  if (kind === "correct") { tone(660, 0, .15); tone(880, .12, .2); }
+  if (kind === "wrong") tone(220, 0, .18);
+  if (kind === "win") [523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => tone(frequency, index * .15, .25));
+  if (kind === "lose") [392, 329.63, 261.63].forEach((frequency, index) => tone(frequency, index * .18, .3));
 }
 
-function startGame() {
-  playStartSound();
+function updateProgress() {
+  progressText.textContent = `العوائق: ${arabicNumber(currentObstacle)} من ١٠`;
+  progressFill.style.width = `${currentObstacle * 10}%`;
+  basket.setAttribute("aria-label", `الورد الذي جمعته: ${currentObstacle} من 10`);
+}
+
+function setGirlPosition(position, animate = true) {
+  if (!animate) girl.style.transition = "none";
+  girl.style.left = `${position}%`;
+  if (!animate) {
+    requestAnimationFrame(() => { girl.style.transition = ""; });
+  }
+}
+
+/* المواقع كنسبة من عرض المشهد؛ على الشاشات الضيقة نعوّض عرض البنت والصخرة بالبكسل حتى لا تنقص البنت من الحافة ولا تتداخل مع الصخرة */
+function layout() {
+  const sceneWidth = scene.clientWidth || 1;
+  const girlHalf = girl.offsetWidth / 2;
+  const rockHalf = rock.offsetWidth / 2;
+  const start = Math.max(4, (girlHalf + 10) / sceneWidth * 100);
+  const gap = Math.max(9, (girlHalf + rockHalf + 8) / sceneWidth * 100);
+  const firstRock = Math.max(24, start + gap);
+  return { start, gap, firstRock };
+}
+
+function obstaclePosition(index) {
+  const { firstRock } = layout();
+  return firstRock + index * (82 - firstRock) / 9;
+}
+
+function resetVisuals() {
   currentObstacle = 0;
-  attemptsLeft = MAX_ATTEMPTS;
-  flowerBasket.innerHTML = "";
-  obstacleCountEl.textContent = currentObstacle;
-  winOverlay.classList.add("hidden");
-  loseOverlay.classList.add("hidden");
-  startBtn.classList.add("hidden");
-  placeGirlInstantly(START_POSITION);
-  goToObstacle(currentObstacle);
+  attemptsLeft = 3;
+  busy = false;
+  started = false;
+  rock.className = "rock";
+  rock.style.left = `${obstaclePosition(0)}%`;
+  setGirlPosition(layout().start, false);
+  bubble.hidden = true;
+  startHint.classList.remove("hide");
+  startButton.hidden = false;
+  flowers.innerHTML = "";
+  updateProgress();
 }
 
-function showQuestion() {
-  attemptsLeft = MAX_ATTEMPTS;
-  const q = questions[currentObstacle];
+function renderHearts() {
+  hearts.textContent = "❤️".repeat(attemptsLeft) + "🖤".repeat(3 - attemptsLeft);
+}
 
-  questionText.textContent = q.text;
-  optionsContainer.innerHTML = "";
-
-  q.options.forEach((optionLabel, index) => {
-    const btn = document.createElement("button");
-    btn.className = "option-btn";
-    btn.textContent = optionLabel;
-    btn.addEventListener("click", () => handleAnswer(index, btn));
-    optionsContainer.appendChild(btn);
+function renderQuestion() {
+  const question = questions[currentObstacle];
+  questionNumber.textContent = `السؤال ${arabicNumber(currentObstacle + 1)} من ١٠`;
+  questionText.textContent = question.text;
+  answers.innerHTML = "";
+  question.options.forEach((option, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "answer-button";
+    button.textContent = option;
+    button.addEventListener("click", () => answerQuestion(index, button));
+    answers.appendChild(button);
   });
-
-  updateAttemptsIndicator();
-  questionBubble.classList.remove("hidden");
+  renderHearts();
+  bubble.hidden = false;
+  setStatus(`السؤال ${currentObstacle + 1}: ${question.text}`);
 }
 
-function updateAttemptsIndicator() {
-  attemptsIndicator.textContent = "❤️".repeat(attemptsLeft) + "🖤".repeat(MAX_ATTEMPTS - attemptsLeft);
+async function walkToObstacle(index) {
+  if (!started) return;
+  busy = true;
+  rock.className = "rock";
+  rock.style.left = `${obstaclePosition(index)}%`;
+  setGirlPosition(obstaclePosition(index) - layout().gap, true);
+  girl.classList.add("walking");
+  await wait(WALK_MS + 50);
+  girl.classList.remove("walking");
+  if (started) {
+    busy = false;
+    renderQuestion();
+  }
 }
 
-function handleAnswer(index, btnEl) {
-  const q = questions[currentObstacle];
+function showLose() {
+  started = false;
+  busy = false;
+  bubble.hidden = true;
+  playSound("lose");
+  loseOverlay.hidden = false;
+  setStatus("انتهت المحاولات الثلاث. حاولي مرة أخرى.");
+}
 
-  if (index === q.correctIndex) {
-    btnEl.classList.add("correct");
-    disableAllOptions();
-    playCorrectSound();
-    setTimeout(solveObstacle, 500);
-  } else {
-    attemptsLeft--;
-    updateAttemptsIndicator();
-    rock.classList.add("shake");
-    btnEl.classList.add("wrong");
-    playWrongSound();
-    setTimeout(() => rock.classList.remove("shake"), 400);
+function addFlower() {
+  const flower = document.createElement("span");
+  flower.className = "collected-flower";
+  flower.textContent = "🌸";
+  flower.setAttribute("aria-label", "وردة");
+  flowers.appendChild(flower);
+}
 
-    if (attemptsLeft <= 0) {
-      disableAllOptions();
-      setTimeout(loseGame, 600);
+function flyFlower() {
+  return new Promise((resolve) => {
+    const rockRect = rock.getBoundingClientRect();
+    const basketRect = basket.getBoundingClientRect();
+    const flying = document.createElement("span");
+    flying.className = "flying-flower";
+    flying.textContent = "🌸";
+    flying.style.left = `${rockRect.left + rockRect.width / 2 - 16}px`;
+    flying.style.top = `${rockRect.top}px`;
+    flying.style.setProperty("--dx", `${basketRect.left + basketRect.width / 2 - (rockRect.left + rockRect.width / 2)}px`);
+    flying.style.setProperty("--dy", `${basketRect.top + basketRect.height / 2 - rockRect.top}px`);
+    document.body.appendChild(flying);
+    flying.addEventListener("animationend", () => {
+      flying.remove();
+      addFlower();
+      resolve();
+    }, { once: true });
+  });
+}
+
+async function answerQuestion(index, selectedButton) {
+  if (!started || busy) return;
+  const question = questions[currentObstacle];
+  if (index === question.correctIndex) {
+    busy = true;
+    selectedButton.classList.add("correct");
+    [...answers.children].forEach((button) => { button.disabled = true; });
+    playSound("correct");
+    setStatus("إجابة صحيحة! تحولت الصخرة إلى وردة.");
+    await wait(250);
+    bubble.hidden = true;
+    rock.classList.add("crumble");
+    girl.classList.add("happy");
+    const flowerFlight = flyFlower();
+    await wait(120);
+    currentObstacle += 1;
+    updateProgress();
+    await flowerFlight;
+    await wait(60);
+    girl.classList.remove("happy");
+    if (currentObstacle < questions.length) {
+      await wait(60);
+      if (started) await walkToObstacle(currentObstacle);
     } else {
-      // زر الإجابة الخاطئة بيضل شغال، منشيل اللون الأحمر بعد لحظة عشان تقدر تجرب من جديد
-      setTimeout(() => btnEl.classList.remove("wrong"), 400);
+      await finishJourney();
+    }
+  } else {
+    attemptsLeft -= 1;
+    renderHearts();
+    selectedButton.classList.remove("wrong-flash");
+    void selectedButton.offsetWidth;
+    selectedButton.classList.add("wrong-flash");
+    rock.classList.remove("shake");
+    void rock.offsetWidth;
+    rock.classList.add("shake");
+    playSound("wrong");
+    setStatus(`إجابة غير صحيحة. بقيت ${attemptsLeft} محاولات.`);
+    if (attemptsLeft === 0) {
+      busy = true;
+      [...answers.children].forEach((button) => { button.disabled = true; });
+      await wait(600);
+      showLose();
     }
   }
 }
 
-function disableAllOptions() {
-  document.querySelectorAll(".option-btn").forEach((b) => (b.disabled = true));
+async function finishJourney() {
+  if (!started) return;
+  busy = true;
+  setStatus("أحسنتِ! البنت تتجه إلى راية النهاية.");
+  setGirlPosition(92 - 5, true);
+  girl.classList.add("walking");
+  await wait(WALK_MS + 100);
+  girl.classList.remove("walking");
+  started = false;
+  busy = false;
+  playSound("win");
+  winOverlay.hidden = false;
+  setStatus("مبروك! لقد فزتِ وجمعتِ ١٠ وردات.");
 }
 
-function flyFlowerToBasket() {
-  const startRect = rock.getBoundingClientRect();
-  const endRect = flowerBasket.getBoundingClientRect();
-
-  const flyingFlower = document.createElement("div");
-  flyingFlower.className = "flying-flower";
-  flyingFlower.textContent = "🌸";
-  flyingFlower.style.left = startRect.left + startRect.width / 2 - 14 + "px";
-  flyingFlower.style.top = startRect.top + startRect.height / 2 - 14 + "px";
-  document.body.appendChild(flyingFlower);
-
-  const dx = endRect.left + endRect.width / 2 - (startRect.left + startRect.width / 2);
-  const dy = endRect.top + endRect.height / 2 - (startRect.top + startRect.height / 2);
-
-  requestAnimationFrame(() => {
-    flyingFlower.style.transform = `translate(${dx}px, ${dy}px) scale(0.4) rotate(360deg)`;
-    flyingFlower.style.opacity = "0.3";
-  });
-
-  setTimeout(() => {
-    flyingFlower.remove();
-    const flowerIcon = document.createElement("span");
-    flowerIcon.textContent = "🌸";
-    flowerIcon.className = "basket-flower-pop";
-    flowerBasket.appendChild(flowerIcon);
-  }, 700);
+function beginGame() {
+  winOverlay.hidden = true;
+  loseOverlay.hidden = true;
+  resetVisuals();
+  started = true;
+  startButton.hidden = true;
+  startHint.classList.add("hide");
+  playSound("start");
+  setStatus("بدأت الرحلة. البنت تمشي إلى أول صخرة.");
+  walkToObstacle(0);
 }
 
-function solveObstacle() {
-  // الصخرة بتختفي وتتحول لوردة تطير لسلة الزهور
-  rock.classList.add("solved");
-  questionBubble.classList.add("hidden");
-  girl.classList.add("bounce");
-  setTimeout(() => girl.classList.remove("bounce"), 500);
+soundToggle.addEventListener("click", () => {
+  muted = !muted;
+  soundToggle.setAttribute("aria-pressed", String(muted));
+  soundToggle.setAttribute("aria-label", muted ? "تشغيل الصوت" : "كتم الصوت");
+  soundIcon.textContent = muted ? "🔇" : "🔊";
+  soundToggle.querySelector(".sound-label").textContent = muted ? "صامت" : "الصوت";
+  if (!muted) playSound("start");
+});
+startButton.addEventListener("click", beginGame);
+document.getElementById("playAgainButton").addEventListener("click", beginGame);
+document.getElementById("restartButton").addEventListener("click", beginGame);
 
-  flyFlowerToBasket();
-
-  currentObstacle++;
-  obstacleCountEl.textContent = currentObstacle;
-
-  if (currentObstacle >= questions.length) {
-    setTimeout(() => walkGirlTo(FINISH_POSITION, winGame), 700);
-  } else {
-    setTimeout(() => goToObstacle(currentObstacle), 700);
-  }
-}
-
-function winGame() {
-  winOverlay.classList.remove("hidden");
-  playWinSound();
-}
-
-function loseGame() {
-  loseOverlay.classList.remove("hidden");
-  questionBubble.classList.add("hidden");
-  playLoseSound();
-}
-
-startBtn.addEventListener("click", startGame);
-document.getElementById("playAgainWinBtn").addEventListener("click", startGame);
-document.getElementById("playAgainLoseBtn").addEventListener("click", startGame);
+resetVisuals();

@@ -1,81 +1,115 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ecf8f0" />
+    <meta name="description" content="رحلة في بستان الأنظمة — لعبة تعليمية لطالبات الصف السابع." />
+    <title>رحلة في بستان الأنظمة</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="game-header">
+        <div class="title-lockup">
+          <span class="title-mark" aria-hidden="true">✦</span>
+          <div>
+            <p class="eyebrow">مهارات رقمية · الصف السابع</p>
+            <h1>🌳 رحلة في بستان الأنظمة 🌳</h1>
+            <p class="subtitle">ساعدي البنت تعبر الحديقة بالإجابة عن الأسئلة الصحيحة!</p>
+          </div>
+        </div>
+        <button class="sound-toggle" id="soundToggle" type="button" aria-label="تشغيل الصوت" aria-pressed="false">
+          <span class="sound-icon" aria-hidden="true">🔊</span>
+          <span class="sound-label">الصوت</span>
+        </button>
+      </header>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>رحلة في بستان الأنظمة</title>
-  <link rel="stylesheet" href="style.css">
-</head>
+      <section class="progress-panel" aria-label="تقدم الرحلة">
+        <div class="progress-copy">
+          <span class="progress-kicker">خريطة الرحلة</span>
+          <strong id="progressText">العوائق: 0 من 10</strong>
+        </div>
+        <div class="progress-track" aria-hidden="true"><span id="progressFill"></span></div>
+        <div class="basket-wrap">
+          <span class="basket-label">سلة الورد</span>
+          <div class="basket" id="basket" aria-label="الورد الذي جمعته: 0 من 10">
+            <span class="basket-icon">🧺</span>
+            <div class="flowers" id="flowers" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
 
-<body>
+      <section class="scene-card" aria-label="حديقة رحلة الأنظمة">
+        <div class="scene" id="scene">
+          <div class="sky-sheen"></div>
+          <div class="sun" aria-hidden="true">☀️</div>
+          <div class="cloud cloud-one" aria-hidden="true">☁️</div>
+          <div class="cloud cloud-two" aria-hidden="true">☁️</div>
+          <div class="hill hill-back" aria-hidden="true"></div>
+          <div class="hill hill-front" aria-hidden="true"></div>
+          <div class="tree-line" aria-hidden="true">
+            <span class="tree tree-a">🌳</span><span class="tree tree-b">🌲</span>
+            <span class="tree tree-c">🌳</span><span class="tree tree-d">🌲</span>
+            <span class="tree tree-e">🌳</span><span class="tree tree-f">🌲</span>
+          </div>
+          <div class="path" aria-hidden="true"></div>
+          <div class="finish" id="finish" aria-label="نهاية الرحلة">
+            <span class="flag">🏁</span><span class="finish-label">النهاية</span>
+          </div>
+          <div class="garden-flowers" aria-hidden="true">
+            <span style="--x: 4%; --r: -8deg">🌷</span><span style="--x: 15%; --r: 5deg">🌼</span>
+            <span style="--x: 32%; --r: -4deg">🌸</span><span style="--x: 53%; --r: 7deg">🌷</span>
+            <span style="--x: 69%; --r: -6deg">🌼</span><span style="--x: 81%; --r: 4deg">🌸</span>
+            <span style="--x: 95%; --r: -5deg">🌷</span>
+          </div>
+          <div class="rock" id="rock" aria-hidden="true"><span></span></div>
+          <div class="girl" id="girl">
+            <div class="girl-shadow"></div>
+            <img src="assets/girl.png" alt="البنت تمشي في الحديقة" />
+          </div>
+          <section class="question-bubble" id="questionBubble" aria-live="polite" hidden>
+            <div class="bubble-topline"><span class="question-number" id="questionNumber">السؤال ١ من ١٠</span><span class="sparkle">✦</span></div>
+            <p class="question-text" id="questionText"></p>
+            <div class="answers" id="answers"></div>
+            <div class="attempts" aria-label="المحاولات المتبقية"><span>المحاولات</span><span id="hearts">❤️❤️❤️</span></div>
+          </section>
+          <div class="start-hint" id="startHint">
+            <span class="hint-spark">✦</span>
+            <strong>كل صخرة تخبّئ سؤالاً!</strong>
+            <span>هل أنتِ مستعدة؟</span>
+          </div>
+        </div>
+      </section>
 
-  <h1>🌳 رحلة في بستان الأنظمة 🌳</h1>
-  <p class="subtitle">ساعدي البنت تعبر الحديقة بالإجابة عن الأسئلة الصحيحة!</p>
+      <button class="primary-button start-button" id="startButton" type="button">
+        <span>ابدأي اللعبة</span><span class="button-arrow" aria-hidden="true">←</span>
+      </button>
+      <p class="tiny-note" id="gameNote">أجيبي بشكل صحيح لتتحول العوائق إلى وردات جميلة.</p>
+    </main>
 
-  <!-- شريط التقدم: يبين كم عائق اجتازت وسلة الزهور اللي جمعتها -->
-  <div class="progress-panel">
-    <div class="progress-text">العوائق: <span id="obstacleCount">0</span> من <span id="totalObstacles">10</span></div>
-    <div id="flowerBasket" class="flower-basket"></div>
-  </div>
-
-  <!-- المشهد الرئيسي: الحديقة والبنت والصخرة وفقاعة السؤال -->
-  <div class="scene">
-    <div class="sun">☀️</div>
-    <div class="clouds">☁️</div>
-
-    <!-- زينة الحديقة: شجر وورد بالخلفية -->
-    <div class="garden-decor">
-      <span class="tree" style="left:2%;">🌳</span>
-      <span class="tree" style="left:16%;">🌲</span>
-      <span class="tree" style="left:37%;">🌳</span>
-      <span class="tree" style="left:58%;">🌲</span>
-      <span class="tree" style="left:73%;">🌳</span>
-      <span class="tree" style="left:88%;">🌲</span>
-      <span class="flower-deco" style="left:8%;">🌷</span>
-      <span class="flower-deco" style="left:22%;">🌼</span>
-      <span class="flower-deco" style="left:33%;">🌸</span>
-      <span class="flower-deco" style="left:48%;">🌷</span>
-      <span class="flower-deco" style="left:63%;">🌼</span>
-      <span class="flower-deco" style="left:77%;">🌸</span>
-      <span class="flower-deco" style="left:96%;">🌷</span>
+    <div class="result-overlay" id="winOverlay" hidden>
+      <div class="result-card win-card">
+        <div class="confetti" aria-hidden="true"><i>✦</i><i>✿</i><i>✦</i><i>❋</i><i>✦</i></div>
+        <div class="result-orb">🌸</div>
+        <p class="result-kicker">رحلة رائعة!</p>
+        <h2>🎉 مبروك! لقد فزت! 🎉</h2>
+        <p>لقد جمعتي 10 وردات وعبرتي كل العوائق!</p>
+        <button class="primary-button result-button" id="playAgainButton" type="button">العب مرة أخرى <span>↺</span></button>
+      </div>
     </div>
 
-    <!-- فقاعة السؤال تظهر فوق راس البنت -->
-    <div id="questionBubble" class="question-bubble hidden">
-      <div id="questionText" class="question-text"></div>
-      <div id="optionsContainer" class="options-container"></div>
-      <div id="attemptsIndicator" class="attempts-indicator"></div>
+    <div class="result-overlay lose-overlay" id="loseOverlay" hidden>
+      <div class="result-card lose-card">
+        <div class="result-orb">🌱</div>
+        <p class="result-kicker">المحاولة جزء من الرحلة</p>
+        <h2>😔 حاولي مرة أخرى!</h2>
+        <p>استخدمتي كل المحاولات الثلاث. اللعبة رح تبدأ من جديد.</p>
+        <button class="primary-button result-button" id="restartButton" type="button">ابدأي من جديد <span>↺</span></button>
+      </div>
     </div>
 
-    <div class="ground">
-      <div class="finish-flag">🏁</div>
-      <div id="girl" class="girl"><img class="girl-icon" src="assets/girl.svg" alt="البنت"></div>
-      <div id="rock" class="rock"></div>
-    </div>
-  </div>
-
-  <button id="startBtn" class="action-btn">ابدأي اللعبة</button>
-
-  <!-- شاشة الفوز -->
-  <div id="winOverlay" class="overlay hidden">
-    <div class="overlay-box">
-      <h2>🎉 مبروك! لقد فزت! 🎉</h2>
-      <p>لقد جمعتي 10 وردات وعبرتي كل العوائق!</p>
-      <button id="playAgainWinBtn" class="action-btn">العب مرة أخرى</button>
-    </div>
-  </div>
-
-  <!-- شاشة الخسارة -->
-  <div id="loseOverlay" class="overlay hidden">
-    <div class="overlay-box">
-      <h2>😔 حاولي مرة أخرى!</h2>
-      <p>استخدمتي كل المحاولات الثلاث. اللعبة رح تبدأ من جديد.</p>
-      <button id="playAgainLoseBtn" class="action-btn">ابدأي من جديد</button>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
-</body>
-
+    <div class="sr-only" id="statusMessage" aria-live="assertive"></div>
+    <script src="script.js"></script>
+  </body>
 </html>
