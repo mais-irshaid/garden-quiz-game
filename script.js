@@ -115,7 +115,7 @@ function setGirlPosition(position, animate = true) {
   }
 }
 
-/* المواقع كنسبة من عرض المشهد؛ على الشاشات الضيقة نعوّض عرض البنت والصخرة بالبكسل حتى لا تنقص البنت من الحافة ولا تتداخل مع الصخرة */
+/* المواقع كنسبة من عرض المشهد؛ على الشاشات الضيقة نعوّض عرض الفتاة والصخرة بالبكسل حتى لا تنقص الفتاة من الحافة ولا تتداخل مع الصخرة */
 function layout() {
   const sceneWidth = scene.clientWidth || 1;
   const girlHalf = girl.offsetWidth / 2;
