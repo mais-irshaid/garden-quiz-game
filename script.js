@@ -14,7 +14,7 @@ function shuffle(list) {
   return copy;
 }
 
-/* نسحب 10 أسئلة جديدة من البنك (نفضّل الأسئلة اللي ما طلعت بالألعاب السابقة)، ونخلط ترتيب الخيارات */
+/* نسحب 10 أسئلة جديدة من البنك (ونفضّل الأسئلة التي لم تظهر في الألعاب السابقة)، ونخلط ترتيب الخيارات */
 function pickQuestions() {
   let fresh = questionBank.filter((q) => !recentlyUsed.has(q));
   if (fresh.length < QUESTIONS_PER_GAME) {
@@ -57,7 +57,7 @@ let started = false;
 let busy = false;
 let muted = false;
 let audioContext = null;
-const WALK_MS = 650; // لازم يطابق مدة "transition: left" للكلاس .girl بملف style.css
+const WALK_MS = 650; // يجب أن تطابق مدة "transition: left" للصنف .girl في ملف style.css
 
 const arabicNumber = (value) => String(value).replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[digit]);
 const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -258,7 +258,7 @@ async function answerQuestion(index, selectedButton) {
     void rock.offsetWidth;
     rock.classList.add("shake");
     playSound("wrong");
-    setStatus(`إجابة غير صحيحة. بقيت ${attemptsLeft} محاولات.`);
+    setStatus(`إجابة غير صحيحة. بقي لديكِ ${arabicNumber(attemptsLeft)} من المحاولات.`);
     if (attemptsLeft === 0) {
       busy = true;
       [...answers.children].forEach((button) => { button.disabled = true; });
@@ -271,7 +271,7 @@ async function answerQuestion(index, selectedButton) {
 async function finishJourney() {
   if (!started) return;
   busy = true;
-  setStatus("أحسنتِ! البنت تتجه إلى راية النهاية.");
+  setStatus("أحسنتِ! تتجه الفتاة نحو راية النهاية.");
   setGirlPosition(92 - 5, true);
   girl.classList.add("walking");
   await wait(WALK_MS + 100);
@@ -280,7 +280,7 @@ async function finishJourney() {
   busy = false;
   playSound("win");
   winOverlay.hidden = false;
-  setStatus("مبروك! لقد فزتِ وجمعتِ ١٠ وردات.");
+  setStatus("تهانينا! لقد فزتِ وجمعتِ عشر وردات.");
 }
 
 function beginGame() {
@@ -292,7 +292,7 @@ function beginGame() {
   startButton.hidden = true;
   startHint.classList.add("hide");
   playSound("start");
-  setStatus("بدأت الرحلة. البنت تمشي إلى أول صخرة.");
+  setStatus("بدأت الرحلة. تمشي الفتاة نحو أول صخرة.");
   walkToObstacle(0);
 }
 
