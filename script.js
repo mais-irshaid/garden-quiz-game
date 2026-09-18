@@ -164,6 +164,8 @@ function renderQuestion() {
     answers.appendChild(button);
   });
   renderHearts();
+  const girlPosition = obstaclePosition(currentObstacle) - layout().gap;
+  bubble.classList.toggle("on-right", girlPosition < 45);
   bubble.hidden = false;
   setStatus(`السؤال ${currentObstacle + 1}: ${question.text}`);
 }
