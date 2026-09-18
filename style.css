@@ -1,0 +1,319 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  background: linear-gradient(#bfe9ff, #eaffea);
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+  min-height: 100vh;
+  direction: rtl;
+}
+
+h1 {
+  color: #2e7d32;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: #4a4a4a;
+  margin-top: 0;
+}
+
+/* ===== شريط التقدم وسلة الزهور ===== */
+.progress-panel {
+  max-width: 700px;
+  margin: 16px auto;
+  background: #ffffffcc;
+  border-radius: 14px;
+  padding: 10px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.progress-text {
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.flower-basket {
+  display: flex;
+  gap: 4px;
+  font-size: 20px;
+  min-height: 26px;
+}
+
+/* الوردة الطايرة من مكان الصخرة لحد سلة الزهور */
+.flying-flower {
+  position: fixed;
+  font-size: 28px;
+  z-index: 100;
+  pointer-events: none;
+  transform: translate(0, 0) scale(1) rotate(0deg);
+  opacity: 1;
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.3, 1), opacity 0.7s ease;
+}
+
+@keyframes flowerPop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.basket-flower-pop {
+  display: inline-block;
+  animation: flowerPop 0.4s ease;
+}
+
+/* ===== المشهد ===== */
+.scene {
+  position: relative;
+  max-width: 700px;
+  height: 320px;
+  margin: 0 auto;
+  background: linear-gradient(#cdefff 0%, #cdefff 55%, #a8e6a1 55%, #7fd67a 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* زينة الحديقة: شجر خلف الأفق وورد على طول الأرض */
+.garden-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.garden-decor .tree {
+  position: absolute;
+  top: 128px;
+  font-size: 40px;
+}
+
+.garden-decor .flower-deco {
+  position: absolute;
+  bottom: 6px;
+  font-size: 20px;
+}
+
+.sun {
+  position: absolute;
+  top: 14px;
+  left: 24px;
+  font-size: 34px;
+}
+
+.clouds {
+  position: absolute;
+  top: 24px;
+  right: 40px;
+  font-size: 28px;
+  opacity: 0.85;
+}
+
+.ground {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  height: 90px;
+}
+
+.girl {
+  position: absolute;
+  left: 4%;
+  bottom: 0;
+  transition: left 1s ease-in-out;
+}
+
+.girl-icon {
+  display: block;
+  width: 62px;
+  height: auto;
+  /* بنعكس اتجاه الرسمة عشان توجه وشها ناحية اتجاه المشي (يمين) */
+  transform: scaleX(-1);
+}
+
+.girl.bounce {
+  animation: bounce 0.5s ease;
+}
+
+.girl.walking {
+  animation: walkBob 0.3s ease-in-out infinite;
+}
+
+.finish-flag {
+  position: absolute;
+  left: 92%;
+  bottom: 0;
+  font-size: 40px;
+}
+
+.rock {
+  position: absolute;
+  left: 35%;
+  bottom: 0;
+  width: 56px;
+  height: 40px;
+  background: radial-gradient(circle at 35% 30%, #9e9e9e, #616161 70%);
+  border-radius: 55% 45% 50% 50% / 60% 55% 45% 40%;
+  box-shadow: inset -4px -4px 6px rgba(0,0,0,0.35), 0 3px 4px rgba(0,0,0,0.25);
+}
+
+.rock.solved {
+  animation: rockDisappear 0.6s ease forwards;
+}
+
+.rock.shake {
+  animation: shake 0.4s ease;
+}
+
+/* ===== فقاعة السؤال ===== */
+.question-bubble {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85%;
+  max-width: 520px;
+  background: #ffffff;
+  border: 3px solid #2e7d32;
+  border-radius: 16px;
+  padding: 14px;
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.question-bubble.hidden {
+  display: none;
+}
+
+.question-text {
+  font-weight: bold;
+  color: #1b5e20;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-btn {
+  background: #e8f5e9;
+  border: 2px solid #66bb6a;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.option-btn:hover {
+  background: #c8e6c9;
+}
+
+.option-btn.correct {
+  background: #66bb6a;
+  color: white;
+}
+
+.option-btn.wrong {
+  background: #ef9a9a;
+  color: white;
+}
+
+.attempts-indicator {
+  margin-top: 10px;
+  font-size: 18px;
+}
+
+/* ===== الأزرار العامة ===== */
+.action-btn {
+  margin-top: 18px;
+  padding: 12px 28px;
+  font-size: 17px;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.action-btn:hover {
+  background: #1b5e20;
+}
+
+/* ===== شاشات الفوز والخسارة ===== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.overlay-box {
+  background: white;
+  padding: 30px 40px;
+  border-radius: 18px;
+  text-align: center;
+  max-width: 400px;
+}
+
+/* شاشة الخسارة بتاخد المساحة كلها بلون مختلف عشان توضح إنه اللعبة بدها تبدأ من جديد */
+#loseOverlay {
+  background: linear-gradient(135deg, #ff8a65, #e53935);
+  animation: screenFade 0.4s ease;
+}
+
+#loseOverlay .overlay-box {
+  background: #fff5f2;
+  animation: popIn 0.4s ease;
+}
+
+@keyframes screenFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ===== الحركات ===== */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-16px); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+@keyframes walkBob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(-5deg); }
+}
+
+@keyframes rockDisappear {
+  0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+  30% { transform: translateY(-6px) scale(1.15) rotate(-10deg); opacity: 1; }
+  100% { transform: translateY(-55px) scale(0) rotate(200deg); opacity: 0; }
+}
